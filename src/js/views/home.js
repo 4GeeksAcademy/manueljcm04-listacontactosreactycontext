@@ -1,15 +1,28 @@
-import React from "react";
-import rigoImage from "../../img/rigo-baby.jpg";
-import "../../styles/home.css";
+import React, { useContext, useEffect } from "react";
+import { Context } from "../store/appContext"
+import ContactCard from "../component/ContactCard";
 
-export const Home = () => (
-	<div className="text-center mt-5">
-		<h1>Hello Rigo!</h1>
-		<p>
-			<img src={rigoImage} />
-		</p>
-		<a href="#" className="btn btn-success">
-			If you see this green button, bootstrap is working
-		</a>
-	</div>
-);
+export const Home = () => {
+    const { store, actions } = useContext(Context);
+
+    useEffect(() => {
+        actions.getUsers();
+    }, []);
+
+    if (!store.users) return null;
+
+    return (
+        <div className="container mt-5">
+            <h1>Contactos</h1>
+            <div className="row">
+                {store.users.map((contact) => (
+                    <div key={contact.id} className="col-md-4">
+                        <ContactCard contact={contact} onDelete={actions.deleteContact} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default Home;

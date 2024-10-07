@@ -1,45 +1,102 @@
 const getState = ({ getStore, getActions, setStore }) => {
-	return {
-		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
-		},
-		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
-
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
-			}
-		}
-	};
-};
-
+    return {
+        store: {
+            users: []
+        },
+        actions: {
+            getUsers: async () => {
+                const agendas = await fetch("https://playground.4geeks.com/contact/agendas");
+                    const agendasJson = await agendas.json();
+            
+                    setStore({ agendas: agendasJson.agendas });
+            },
+            
+            postAgenda: async (agendasslug) => {
+                const newAgenda = await fetch(
+                  `https://playground.4geeks.com/contact/agendas/${agendasslug}`,
+                  {
+                    method: "POST",
+                  }
+                );
+                if (newAgenda.ok) {
+                  const agendas = getStore().agendas;
+                  const newAgendaJson = await newAgenda.json();
+                  console.log("Se ha creado la nueva agenda de contactos con exito");
+                  const newAgendas = [...agendas, newAgendaJson];
+                  setStore({ agendas: newAgendas });
+                } else {
+                  console.log("No se pudo crear la agenda");
+                }
+              },
+              getAgenda: async (agendasslug) => {
+                const detalleAgenda = await fetch(
+                  `https://playground.4geeks.com/contact/agendas/${agendasslug}`
+                );
+                const detalleAgendaJson = await detalleAgenda.json();
+                return detalleAgendaJson;
+              },
+              postContacto: async (newContact) => {
+                try {
+                  const response = await fetch(
+                    `https://playground.4geeks.com/contact/agendas/Dayloc/contacts`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(newContact),
+                    }
+                  );
+                  if (response.ok) {
+                    const addedContact = await response.json();
+                    const store = getStore();
+                    setStore({
+                      contacts: [...store.contacts, addedContact],
+                    });
+                  } else {
+                    console.error("Error al crear contacto");
+                  }
+                } catch (error) {
+                  console.error("Error agregando contact:", error);
+                }
+              },
+              deleteContact: async (id) => {
+                try {
+                  const response = await fetch(
+                    `https://playground.4geeks.com/contact/agendas/Dayloc/contacts/${id}`,
+                    {
+                      method: "DELETE",
+                    }
+                  );
+                  if (response.ok) {
+                    const store = getStore();
+                    const updatedContacts = store.contacts.filter(
+                      (contact) => contact.id !== id
+                    );
+                    setStore({ contacts: updatedContacts });
+                  } else {
+                    console.error("Failed to delete contact");
+                  }
+                } catch (error) {
+                  console.error("Error deleting contact:", error);
+                }
+              },
+              getContacts: async (agendasslug) => {
+                try {
+                  const response = await fetch(
+                    `https://playground.4geeks.com/contact/agendas/Dayloc/contacts`
+                  );
+                  if (response.ok) {
+                    const data = await response.json();
+                    setStore({ contacts: data });
+                  } else {
+                    console.error("Failed to fetch contacts");
+                  }
+                } catch (error) {
+                  console.error("Error fetching contacts:", error);
+                }
+              },
+            },
+          };
+        };
 export default getState;
